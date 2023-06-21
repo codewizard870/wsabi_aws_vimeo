@@ -12,7 +12,7 @@ const s3 = new AWS.S3({
 const s3Bucket = 'reallifenetwork';
 const s3FolderName = 'drop/rljh/';
 
-const vimeoToken = '229898c696b00ebb5a364706862c52d9'; //"cfc8e36f9c534affa707dc5c92beedc2";
+const vimeoToken = '650fa71ef55e6d138bddc498d0bdaef0'; //"cfc8e36f9c534affa707dc5c92beedc2";
 const vimeoUserId = '14050482'; //"202214418";
 const mysqlUserId = '100';
 
@@ -20,16 +20,17 @@ const vimeoHost = 'https://api.vimeo.com';
 const host = 'https://login.reallifenetwork.com';
 // const host = 'https://staging.login.reallifenetwork.com';
 const filePath = './vm2aws/links.json';
+const failedPath = './vm2aws/failed.json';
 
 const { readFile } = require('fs/promises');
-const iStart = 650;
-let iEnd = 0;
+const iStart = 400;
+let iEnd = 450;
 
 const readList = async () => {
   console.log('reading list');
   const result = await readFile(filePath, 'utf-8');
   const lists = JSON.parse(result);
-  iEnd = lists.length;
+  // iEnd = lists.length;
 
   for (let i = iStart; i < iEnd; i++) {
     try {
@@ -38,12 +39,10 @@ const readList = async () => {
       list.thumbnail = await uploadFile(list.thumbnail, 'image', s3FolderName);
       console.log(list.url)
       console.log(list.thumbnail)
-      if(list.short_description)
-      list.short_description = list.short_description.slice(0, 498);
 
       try {
         const res = await axios.post(`${host}/api/video`, list);
-        console.log(list.title + ' success');
+        console.log(i, list.title + ' success');
       } catch (error) {
         console.log('===', error);
         throw new Error(error);
@@ -58,12 +57,13 @@ const readList = async () => {
 
 async function makeList() {
   const lists = [];
+  const failed = [];
 
   console.log('making list');
 
   let videoUrl = `/users/${vimeoUserId}/videos?page=1`;
   const videoFilters =
-    '&filters=uri,name,description,player_embed_url,duration,pictures,release_time&per_page=100';
+    '&filters=uri,name,description,download,duration,pictures,release_time&per_page=100';
   while (videoUrl != null) {
     try {
       res = await axios.get(`${vimeoHost}${videoUrl}${videoFilters}`, {
@@ -77,25 +77,33 @@ async function makeList() {
       const videos = res.data.data;
       for (let j = 0; j < videos.length; j++) {
         const video = videos[j];
+
         let tags = [];
         if (video.tags.length > 0) {
           for (const tag of video.tags) {
             tags.push({ text: tag.tag });
           }
         }
-        lists.push({
-          title: video.name,
-          short_description: video.description,
-          url: video.player_embed_url,
-          video_type: 'MP4',
-          quality: 'FHD',
-          duration: video.duration,
-          thumbnail: video.pictures.sizes[video.pictures.sizes.length - 1].link,
-          release_date: video.release_time.split('T')[0],
-          user_id: mysqlUserId,
-          approved: 1,
-          tags: tags,
-        });
+        try {
+          const download = video.download[video.download.length - 1];
+          console.log(j + res.data.per_page * (res.data.page-1));
+
+          lists.push({
+            title: video.name,
+            short_description: video.description,
+            url: download.link,
+            video_type: download.type,
+            quality: download.quality,
+            duration: video.duration,
+            thumbnail: video.pictures.sizes[video.pictures.sizes.length - 1].link,
+            release_date: video.release_time.split('T')[0],
+            user_id: mysqlUserId,
+            approved: 1,
+            tags: tags,
+          });
+        } catch (e) {
+          failed.push(video);
+        }
       }
     } catch (e) {
       console.log(e);
@@ -110,6 +118,15 @@ async function makeList() {
     }
 
     console.log('Data written to file successfully!', lists.length);
+  });
+
+  fs.writeFile(failedPath, JSON.stringify(failed), (err) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+
+    console.log('Data written to file successfully!', failed.length);
   });
 }
 
