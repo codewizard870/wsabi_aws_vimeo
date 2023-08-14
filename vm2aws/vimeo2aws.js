@@ -10,7 +10,7 @@ const s3 = new AWS.S3({
   secretAccessKey: 'kpAsCMcDN0/TKjDn0rt1JMJM4UuDJhz5G2w/RG9u',
 });
 const s3Bucket = 'reallifenetwork';
-const s3FolderName = 'drop/rljh/';
+const s3FolderName = 'drop/rlmvimeo/';
 
 const vimeoToken = '650fa71ef55e6d138bddc498d0bdaef0'; //"cfc8e36f9c534affa707dc5c92beedc2";
 const vimeoUserId = '14050482'; //"202214418";
@@ -23,21 +23,22 @@ const filePath = './vm2aws/links.json';
 const failedPath = './vm2aws/failed.json';
 
 const { readFile } = require('fs/promises');
-const iStart = 400;
-let iEnd = 450;
+const iStart = 401;
+let iEnd = 401;
+let failed = [];
 
 const readList = async () => {
   console.log('reading list');
   const result = await readFile(filePath, 'utf-8');
   const lists = JSON.parse(result);
-  // iEnd = lists.length;
+  iEnd = lists.length;
 
   for (let i = iStart; i < iEnd; i++) {
     try {
       const list = lists[i];
+      console.log(list.url)
       list.url = await uploadFile(list.url, 'video', s3FolderName);
       list.thumbnail = await uploadFile(list.thumbnail, 'image', s3FolderName);
-      console.log(list.url)
       console.log(list.thumbnail)
 
       try {
@@ -49,7 +50,8 @@ const readList = async () => {
       }
     } catch (e) {
       console.log('error at ', i + ' \n', e);
-      throw new Error(e);
+      // throw new Error(e);
+      failed.push(i);
     }
     console.log('current index', i, lists[i].title);
   }
