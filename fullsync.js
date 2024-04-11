@@ -27,6 +27,8 @@ async function processData() {
   query = `SELECT * FROM videos WHERE series_id = '82'`
   const result = await asyncQuery(connection, query)
 
+  console.log('result',result)
+
   for (let i = 0; i < series.seasons.length; i++) {
     const season = series.seasons[i];
     for (let j = 0; j < season.episodes.length; j++) {
@@ -36,7 +38,12 @@ async function processData() {
 
         if (episode.title === result[k].title) {
 
-          const updateQuery = `UPDATE videos SET short_description = '${episode.short_description}',video_type = '${episode.video_type}',quality = '${episode.quality}',duration = '${episode.duration}',release_date = '${episode.release_date}' `;
+          const shortDescription = connection.escape(episode.shortDescription);
+          const releaseDate = connection.escape(episode.releaseDate);
+          const duration = connection.escape(episode.content.duration);
+
+          const updateQuery = `UPDATE videos SET short_description = ${shortDescription},release_date = ${releaseDate},duration=${duration}`;
+          console.log(updateQuery)
 
           await asyncQuery(connection, updateQuery);
 
