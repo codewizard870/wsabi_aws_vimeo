@@ -29,8 +29,8 @@ async function processData() {
 
   const updatedCount = 0;
 
-  const totalCount = 0;
-  const succed = 0;
+  let totalCount = 0;
+  let succed = 0;
 
   for (let i = 0; i < series.seasons.length; i++) {
     const season = series.seasons[i];
