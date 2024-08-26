@@ -44,7 +44,7 @@ async function processData() {
           const releaseDate = connection.escape(episode.releaseDate);
           const duration = connection.escape(episode.content.duration);
 
-          const updateQuery = `UPDATE videos SET short_description = "${shortDescription}", release_date = "${releaseDate}", duration = "${duration}"`;
+          const updateQuery = `UPDATE videos SET short_description = ${shortDescription}, release_date = ${releaseDate}, duration = ${duration}`;
 
           await asyncQuery(connection, updateQuery);
 
@@ -83,6 +83,7 @@ async function processData() {
   }
   console.log(totalCount, succed);
   console.log('=== COMPLETED ===')
+  process.exit(1);
 }
 processData()
 
