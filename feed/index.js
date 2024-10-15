@@ -5,15 +5,19 @@ const axios = require('axios');
 const mysql = require('mysql');
 const { v4: uuidv4 } = require('uuid');
 const s3 = new AWS.S3({
-  accessKeyId: 'AKIAY2GEG7ROBF4FFDFZ',
-  secretAccessKey: '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',
+  accessKeyId: '',
+  secretAccessKey: '',
 });
 const s3Bucket = 'reallifenetwork';
 const s3FolderName = 'drop/standontheword/';
 
 const xmlPath = 'https://bible.frc.org/rss/SOTW/feed.xml';
-const host = 'https://staging.login.reallifenetwork.com';
-let failed = [];
+const host = 'https://login.reallifenetwork.com';
+const mysqlUserId = '100';
+
+let iSkip = 0;
+let iSuccess = 0;
+let iFailed = 0;
 
 async function uploadFile(url, type, folderName) {
   console.log('upload file:' + url + '\n');
@@ -67,6 +71,19 @@ const readList = async () => {
   for (let i = 0; i < iEnd; i++) {
     try {
       const list = lists[i];
+      try {
+        const { data } = await axios.get(`${host}/api/video/getbytitle?title=${list.title}`);
+        console.log(list.title, list.enclosure.length, data.data[0].title, data.data[0].duration)
+
+        if (list.enclosure.length == data.data[0].duration) {
+          console.log("skipping")
+          iSkip ++;
+          continue;
+        }
+      } catch (e) {
+        console.log("error", i)
+      }
+
       const url = await uploadFile(list.enclosure.url, 'video', s3FolderName);
 
       const params = {
@@ -78,25 +95,31 @@ const readList = async () => {
         duration: list.enclosure.length,
         thumbnail: "https://reallifenetwork.s3.amazonaws.com/drop/standontheword/5071540281706392602_20240826173336.jpg",
         release_date: list.pubDate,
-        series_id: 681,
-        approved: 1,
-        tags: []
+        series_id: 688,
+        approved: 0,
+        tags: [],
+        user_id: mysqlUserId
       };
-console.log(params)
+      console.log(params)
       try {
         const res = await axios.post(`${host}/api/video`, params);
         console.log(i, params.title + ' success');
+        iSuccess ++;
       } catch (error) {
         console.log('===', error);
         throw new Error(error);
       }
     } catch (e) {
-      console.log('error at ', i + ' \n', e);
+      console.log('error at ', i + ' \n');
       // throw new Error(e);
-      failed.push(i);
+      iFailed++;
     }
     console.log('current index', i, lists[i].title);
   }
+
+  console.log("success: " + iSuccess);
+  console.log("failed: " + iFailed);
+  console.log("skip :" + iSkip);
 }
 
 readList();
