@@ -6,8 +6,8 @@ const items = require('./update-axioserror.json');
 
 ///////////////////////////////////////
 const s3 = new AWS.S3({
-  accessKeyId: 'AKIAY2GEG7ROBF4FFDFZ',
-  secretAccessKey: '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',
+  accessKeyId: '',
+  secretAccessKey: '',
   useAccelerateEndpoint: true,
 });
 const s3Bucket = 'reallifenetwork';

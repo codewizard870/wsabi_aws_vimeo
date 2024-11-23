@@ -86,15 +86,32 @@ const readList = async () => {
 
       const url = await uploadFile(list.enclosure.url, 'video', s3FolderName);
 
+      let release_date = list.pubDate;
+      const weekdays = {
+        Tues: 'Tue',
+        Weds: 'Wed',
+        Thur: 'Thu',
+        Frid: 'Fri',
+        Satu: 'Sat',
+        Sund: 'Sun',
+        Mond: 'Mon',
+      };
+
+      // Replace each 4-letter weekday abbreviation
+      Object.keys(weekdays).forEach(fourLetter => {
+          const threeLetter = weekdays[fourLetter];
+          release_date = release_date.replace(new RegExp(fourLetter, 'g'), threeLetter);
+      });
+      console.log(list.pubDate, release_date)
       const params = {
         title: list.title,
         short_description: list.description,
         url: url,
-        video_type: list.enclosure.type,
+        video_type: "mp4",
         quality: "FHD",
         duration: list.enclosure.length,
         thumbnail: "https://reallifenetwork.s3.amazonaws.com/drop/standontheword/5071540281706392602_20240826173336.jpg",
-        release_date: list.pubDate,
+        release_date: release_date,
         series_id: 688,
         approved: 0,
         tags: [],
