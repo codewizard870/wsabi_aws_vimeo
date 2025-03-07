@@ -101,7 +101,7 @@ const readList = async () => {
         console.log('error', i, e);
       }
 
-      const url = await uploadFile(list.enclosure.url, 'video', s3FolderName);
+      const url = ''; //await uploadFile(list.enclosure.url, 'video', s3FolderName);
 
       let release_date = list.pubDate;
       const weekdays = {
@@ -148,6 +148,12 @@ const readList = async () => {
         INSERT INTO videos (title, short_description, url, video_type, quality, duration, thumbnail, release_date, series_id, approved, season_id, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
+
+        const timestamp = new Date(Date.now())
+          .toISOString()
+          .slice(0, 19)
+          .replace('T', ' ');
+
         const values = [
           params.title,
           params.short_description,
@@ -160,8 +166,8 @@ const readList = async () => {
           params.series_id,
           params.approved,
           seasons[0].id,
-          Date.now(),
-          Date.now(),
+          timestamp,
+          timestamp,
         ];
         const [result] = await connection.execute(query, values);
         console.log(i, params.title + ' success');
