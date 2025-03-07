@@ -1,23 +1,24 @@
 const fastXmlParser = require('fast-xml-parser');
 const AWS = require('aws-sdk');
 const axios = require('axios');
-
-const mysql = require('mysql');
 const { v4: uuidv4 } = require('uuid');
+require('dotenv').config();
+
 const s3 = new AWS.S3({
-  accessKeyId: '',
-  secretAccessKey: '',
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 const s3Bucket = 'reallifenetwork';
 const s3FolderName = 'drop/standontheword/';
 
-const feedPath = 'https://ga-prod-api.powr.tv/roku-rss.json?__site=reallifenetwork&thumbWidth=1920&thumbHeight=1080&thumbCrop=1&format=mp4&seriesPosters=true&allContent=true';
+const feedPath =
+  'https://ga-prod-api.powr.tv/roku-rss.json?__site=reallifenetwork&thumbWidth=1920&thumbHeight=1080&thumbCrop=1&format=mp4&seriesPosters=true&allContent=true&includeChannels=true&includeAccessType=true';
 const host = 'https://staging.login.reallifenetwork.com';
-const mysqlUserId = '100';
 
 let iSkip = 0;
 let iSuccess = 0;
 let iFailed = 0;
+return;
 
 async function uploadFile(url, type, folderName) {
   console.log('upload file:' + url + '\n');
@@ -44,7 +45,7 @@ async function uploadFile(url, type, folderName) {
     };
 
     const data = await s3.upload(params).promise();
-    console.log("uploaded", data.Location);
+    console.log('uploaded', data.Location);
     return data.Location;
   } catch (error) {
     console.error(error);
@@ -59,7 +60,7 @@ const readList = async () => {
 
   const lists = jsonObj.series;
   const iStart = 0;
-  const iEnd = 1;//lists.length;
+  const iEnd = lists.length;
 
   for (let i = iStart; i < iEnd; i++) {
     const seasons = lists[i].seasons;
@@ -68,10 +69,17 @@ const readList = async () => {
       for (let k = 0; k < episodes.length; k++) {
         try {
           const list = episodes[k];
-          
+
           try {
-            const { data } = await axios.get(`${host}/api/video/getbytitle?title=${list.title}`);
-            console.log(data, list.title, list.content.videos, list.thumbnail)
+            const { data } = await axios.get(
+              `${host}/api/video/getbytitle?title=${list.title}`
+            );
+            console.log(data, list.title, list.content.videos, list.thumbnail);
+
+            // const { data: series }  = await axios.get(`${host}/api/series/getbyname?name=${lists[i].title}`);
+            // if(!series.id) {
+            //   continue;
+            // }
 
             // if (list.enclosure.length == data.data[0].duration) {
             //   console.log("skipping")
@@ -79,7 +87,7 @@ const readList = async () => {
             //   continue;
             // }
           } catch (e) {
-            console.log("error", e)
+            console.log('error', e);
           }
 
           // const url = await uploadFile(list.enclosure.url, 'video', s3FolderName);
@@ -117,9 +125,9 @@ const readList = async () => {
     console.log('current index', i, lists[i].title);
   }
 
-  console.log("success: " + iSuccess);
-  console.log("failed: " + iFailed);
-  console.log("skip :" + iSkip);
-}
+  console.log('success: ' + iSuccess);
+  console.log('failed: ' + iFailed);
+  console.log('skip :' + iSkip);
+};
 
 readList();
