@@ -15,9 +15,7 @@ const s3Bucket = 'reallifenetwork';
 const s3FolderName = 'drop/standontheword/';
 
 const xmlPath = 'https://bible.frc.org/rss/SOTW/feed.xml';
-const host = 'https://login.reallifenetwork.com';
-const mysqlUserId = '100';
-
+const series_id = 688;
 let iSkip = 0;
 let iSuccess = 0;
 let iFailed = 0;
@@ -89,6 +87,7 @@ const readList = async () => {
         console.log(
           list.title,
           list.enclosure.length,
+          rows[0].id,
           rows[0].title,
           rows[0].duration
         );
@@ -135,15 +134,19 @@ const readList = async () => {
         thumbnail:
           'https://reallifenetwork.s3.amazonaws.com/drop/standontheword/5071540281706392602_20240826173336.jpg',
         release_date: release_date,
-        series_id: 688,
+        series_id: series_id,
         approved: 1,
       };
       console.log(params);
 
       try {
+        const [seasons] = await connection.execute(
+          `SELECT * from seasons where series_id = ${series_id}`
+        );
+
         const query = `
-        INSERT INTO videos (title, short_description, url, video_type, quality, duration, thumbnail, release_date, series_id, approved)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO videos (title, short_description, url, video_type, quality, duration, thumbnail, release_date, series_id, approved, season_id, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
           params.title,
@@ -156,6 +159,9 @@ const readList = async () => {
           params.release_date,
           params.series_id,
           params.approved,
+          seasons[0].id,
+          Date.now(),
+          Date.now(),
         ];
         const [result] = await connection.execute(query, values);
         console.log(i, params.title + ' success');
