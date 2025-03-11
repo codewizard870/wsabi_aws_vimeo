@@ -101,7 +101,7 @@ const readList = async () => {
         console.log('error', i, e);
       }
 
-      const url = ''; //await uploadFile(list.enclosure.url, 'video', s3FolderName);
+      const url = await uploadFile(list.enclosure.url, 'video', s3FolderName);
 
       let release_date = list.pubDate;
       const weekdays = {
