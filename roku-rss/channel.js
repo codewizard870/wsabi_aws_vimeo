@@ -13,6 +13,7 @@ const s3 = new AWS.S3({
 
 const s3Bucket = 'reallifenetwork';
 const channelName = 'RLN-NEWS';
+const s3FolderName = 'drop/RLN-NEWS-CHANNEL/';
 
 const feedPath =
   'https://ga-prod-api.powr.tv/roku-rss.json?__site=reallifenetwork&thumbWidth=1920&thumbHeight=1080&thumbCrop=1&format=mp4&seriesPosters=true&allContent=true&includeChannels=true&includeAccessType=true';
@@ -84,8 +85,8 @@ const readList = async () => {
           `SELECT * from videos where source_id="${list.id}"`
         );
 
+        console.log(list.title, rows[0].id, rows[0].title);
         if (rows.length > 0) {
-          console.log(list.title, rows[0].id, rows[0].title);
           console.log('skipping');
           iSkip++;
           continue;
@@ -95,11 +96,13 @@ const readList = async () => {
         console.log(e);
       }
 
+      console.log("uploading video")
       const videoUrl = await uploadFile(
-        list.content.videos.url,
+        list.content.videos[0].url,
         'video',
         s3FolderName
       );
+      console.log("uploading thumbnail")
       const thumbnailUrl = await uploadFile(
         list.thumbnail,
         'image',
@@ -125,7 +128,7 @@ const readList = async () => {
           threeLetter
         );
       });
-      // console.log(list.releaseDate, release_date);
+      console.log(list.releaseDate, release_date);
 
       const params = {
         title: list.title,
@@ -140,7 +143,7 @@ const readList = async () => {
         approved: 1,
         source_id: list.id,
       };
-      // console.log(params);
+      console.log(params);
 
       try {
         const query = `
@@ -177,6 +180,7 @@ const readList = async () => {
       }
     } catch (e) {
       console.log('error at ', i + ' \n');
+      console.log(e)
       iFailed++;
     }
     console.log('current index', i, lists[i].title);
