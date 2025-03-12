@@ -97,19 +97,19 @@ const readList = async () => {
       }
 
       console.log('uploading video');
-      const videoUrl = '';
-      const thumbnailUrl = '';
-      // const videoUrl = await uploadFile(
-      //   list.content.videos[0].url,
-      //   'video',
-      //   s3FolderName
-      // );
-      // console.log("uploading thumbnail")
-      // const thumbnailUrl = await uploadFile(
-      //   list.thumbnail,
-      //   'image',
-      //   s3FolderName
-      // );
+      // const videoUrl = '';
+      // const thumbnailUrl = '';
+      const videoUrl = await uploadFile(
+        list.content.videos[0].url,
+        'video',
+        s3FolderName
+      );
+      console.log('uploading thumbnail');
+      const thumbnailUrl = await uploadFile(
+        list.thumbnail,
+        'image',
+        s3FolderName
+      );
 
       let release_date = list.releaseDate;
       const weekdays = {
@@ -191,7 +191,7 @@ const readList = async () => {
             `);
             tagId = tagInsert.insertId;
           }
-          console.log(tagId);
+
           if (tagId) {
             await connection.execute(`
               INSERT INTO video_tag (video_id, tag_id) VALUES(${result.insertId}, ${tagId})  
