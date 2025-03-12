@@ -96,18 +96,20 @@ const readList = async () => {
         console.log(e);
       }
 
-      console.log("uploading video")
-      const videoUrl = await uploadFile(
-        list.content.videos[0].url,
-        'video',
-        s3FolderName
-      );
-      console.log("uploading thumbnail")
-      const thumbnailUrl = await uploadFile(
-        list.thumbnail,
-        'image',
-        s3FolderName
-      );
+      console.log('uploading video');
+      const videoUrl = '';
+      const thumbnailUrl = '';
+      // const videoUrl = await uploadFile(
+      //   list.content.videos[0].url,
+      //   'video',
+      //   s3FolderName
+      // );
+      // console.log("uploading thumbnail")
+      // const thumbnailUrl = await uploadFile(
+      //   list.thumbnail,
+      //   'image',
+      //   s3FolderName
+      // );
 
       let release_date = list.releaseDate;
       const weekdays = {
@@ -172,15 +174,41 @@ const readList = async () => {
           timestamp,
         ];
         const [result] = await connection.execute(query, values);
+        console.log(result.insertId);
+
+        for (let j = 0; j < list.tags.length; j++) {
+          if (!list.tags[j]) continue;
+
+          let tagId = undefined;
+          const [tagResult] = await connection.execute(
+            `SELECT * from tags where name="${list.tags[j]}"`
+          );
+          if (tagResult.length > 0) {
+            tagId = tagResult[0].id;
+          } else {
+            const [tagInsert] = await connection.execute(`
+              INSERT INTO tags (name, created_at, updated_at) VALUES("${list.tags[j]}", "${timestamp}", "${timestamp}")
+            `);
+            tagId = tagInsert.insertId;
+          }
+          console.log(tagId);
+          if (tagId) {
+            await connection.execute(`
+              INSERT INTO video_tag (video_id, tag_id) VALUES(${result.insertId}, ${tagId})  
+            `);
+          }
+        }
+
         console.log(i, params.title + ' success');
         iSuccess++;
+        break;
       } catch (error) {
         console.log('Creation Error: ', error);
         throw new Error(error);
       }
     } catch (e) {
       console.log('error at ', i + ' \n');
-      console.log(e)
+      console.log(e);
       iFailed++;
     }
     console.log('current index', i, lists[i].title);
