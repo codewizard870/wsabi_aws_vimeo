@@ -201,7 +201,6 @@ const readList = async () => {
 
         console.log(i, params.title + ' success');
         iSuccess++;
-        break;
       } catch (error) {
         console.log('Creation Error: ', error);
         throw new Error(error);
