@@ -1,13 +1,15 @@
-import AWS from 'aws-sdk';
-import axos from 'axios';
-import { v4 as uuidv4 } from 'uuid';
+const AWS = require('aws-sdk');
+const axios = require('axios');
+const mysql = require('mysql2/promise');
+
+const { v4: uuidv4 } = require('uuid');
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-export const standardizeWeekdays = (releaseDate) => {
+const standardizeWeekdays = (releaseDate) => {
   const weekdays = {
     Tues: 'Tue',
     Weds: 'Wed',
@@ -27,12 +29,12 @@ export const standardizeWeekdays = (releaseDate) => {
   return tempDate;
 };
 
-export const standardizeDate = (date) => {
+const standardizeDate = (date) => {
   const timestamp = new Date(date).toISOString().slice(0, 19).replace('T', ' ');
   return timestamp;
 };
 
-export const uploadFile = async (url, type, bucket, folderName) => {
+const uploadFile = async (url, type, bucket, folderName) => {
   console.log('upload file:' + url + '\n');
   try {
     const response = await axios({
@@ -63,4 +65,10 @@ export const uploadFile = async (url, type, bucket, folderName) => {
     console.error(error);
     throw new Error(error);
   }
+};
+
+module.exports = {
+  standardizeWeekdays,
+  standardizeDate,
+  uploadFile,
 };
