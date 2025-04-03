@@ -92,7 +92,7 @@ const readList = async () => {
         season_id = rows[0].id;
       } else {
         const [seasonInsert] = await connectionStaging.execute(
-          `INSERT INTO seasons (name, series_id, status, created_at, updated_at) VALUES('${season.title}', '${series_id}', '1', '${timestamp}', '${timestamp}')`
+          `INSERT INTO seasons (name, series_id, status, season_number, short_description, created_at, updated_at) VALUES('${season.title}', '${series_id}', '1', ${season.seasonNumber}, '${season.description}', '${timestamp}', '${timestamp}')`
         );
         season_id = seasonInsert.insertId;
       }
@@ -156,6 +156,7 @@ const readList = async () => {
           );
 
           const params = [
+            list.id,
             list.title,
             list.shortDescription,
             videoUrl,
@@ -173,8 +174,8 @@ const readList = async () => {
           ];
 
           const query = `
-              INSERT INTO videos (title, short_description, url, video_type, quality, duration, thumbnail, release_date, approved, series_id, season_id, source_id, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              INSERT INTO videos (id, title, short_description, url, video_type, quality, duration, thumbnail, release_date, approved, series_id, season_id, source_id, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
               `;
 
           const [result] = await connectionStaging.execute(query, params);
